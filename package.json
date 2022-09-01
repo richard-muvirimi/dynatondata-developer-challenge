@@ -1,0 +1,39 @@
+{
+  "name": "dynatondata",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "base-64": "^1.0.0",
+    "block-stream": "^0.0.9",
+    "create-react-app": "^5.0.1",
+    "luxon": "^3.0.3",
+    "sprintf-js": "^1.1.2",
+    "string-natural-compare": "^3.0.1"
+  },
+  "scripts": {
+    "build": "webpack --mode development --progress --config webpack.config.js",
+    "dist": "webpack --mode production --config webpack.config.js"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
