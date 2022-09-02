@@ -1,13 +1,11 @@
 import './App.css';
 import { ThemeProvider } from "@emotion/react";
-import { Alert, AlertTitle, createTheme, Snackbar } from "@mui/material";
-import Header from './sections/Header';
+import { Alert, AlertTitle, Box, createTheme, Snackbar } from "@mui/material";
 import { Component, lazy, Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import Loading from './screens/Loading';
 import { sprintf } from 'sprintf-js';
 import environment from './environment';
 import Utils from './utils/Utils';
+import Loading from './screens/Loading';
 const axios = require('axios').default;
 
 export default class App extends Component {
@@ -25,8 +23,8 @@ export default class App extends Component {
 		this.setToken = this.setToken.bind(this);
 		this.showErrorMessage = this.showErrorMessage.bind(this);
 		this.clearMessage = this.clearMessage.bind(this);
-		this.tokenValid = this.tokenValid.bind(this);
 		this.fetchUser = this.fetchUser.bind(this);
+		this.setUser = this.setUser.bind(this)
 	}
 
 	get defaultUser() {
@@ -64,81 +62,6 @@ export default class App extends Component {
 		});
 	}
 
-	get shopPage() {
-		return lazy(async () => import("./screens/Shop"));
-	}
-
-	get productPage() {
-		return lazy(async () => import("./screens/Product"));
-	}
-
-	async tokenValid(token) {
-		let url = sprintf("%susers?token=%s", environment.SERVER_URL, token);
-
-		let response = await axios.get(url);
-
-		if (response.data.user !== undefined) {
-			this.setState({ user: response.data.user });
-			return true;
-		}
-
-		return false;
-
-	}
-
-	get settingsPage() {
-		return lazy(async () => {
-			// if (this.state.token.length !== 0) {
-
-			// 	if (await this.tokenValid(this.state.token)) {
-			return import("./screens/Settings");
-			// 	}
-			// }
-			// this.showErrorMessage("Login to access this page.");
-			// return import("./screens/Login");
-
-		});
-	}
-
-	get loginPage() {
-		return lazy(async () => {
-			if (this.state.token.length === 0) {
-
-				return import("./screens/Login");
-			}
-			return import("./screens/Product");
-
-		});
-	}
-
-	get productsPage() {
-		return lazy(async () => {
-			/* if (this.state.user.admin) {
-
-				if (true || await this.tokenValid(this.state.token)) { */
-			return import("./screens/Products");
-			/* 	}
-			}
-			this.showErrorMessage("Login to access this page.");
-			return import("./screens/Login"); */
-
-		});
-	}
-
-	get editPage() {
-		return lazy(async () => {
-			// if (this.state.user.admin) {
-
-			// 	if (await this.tokenValid(this.state.token)) {
-			return import("./screens/ProductEdit");
-			// 	}
-			// }
-			// this.showErrorMessage("Login to access this page.");
-			// return import("./screens/Login");
-
-		});
-	}
-
 	showMessage(message) {
 		this.setState({ alertMessage: message, alertType: "success" });
 	}
@@ -149,10 +72,6 @@ export default class App extends Component {
 
 	clearMessage() {
 		this.setState({ alertMessage: "" });
-	}
-
-	componentDidMount() {
-		this.fetchUser();
 	}
 
 	setToken(token) {
@@ -173,35 +92,70 @@ export default class App extends Component {
 		});
 	}
 
+	setUser(user) {
+		this.setState({ user: user });
+	}
+
 	async fetchUser() {
-		let url = sprintf("%susers?token=%s", environment.SERVER_URL, Utils.token);
 
-		let response = await axios.get(url);
+		let token = Utils.token;
 
-		this.setState({ user: response.data.user });
+		if (token.length !== 0) {
+			let params = new URLSearchParams({
+				token: token
+			});
+
+			let url = sprintf("%susers?", environment.SERVER_URL) + params.toString();
+
+			let response = await axios.get(url);
+
+			this.setUser(response.data.user);
+		}
+	}
+
+	componentDidMount() {
+		this.fetchUser();
+	}
+
+	get mainScreen() {
+		return lazy(async () => {
+
+			let token = this.state.token;
+
+			if (token.length !== 0) {
+
+				let params = new URLSearchParams({
+					token: token
+				});
+
+				let url = sprintf("%susers?", environment.SERVER_URL) + params.toString();
+
+				let response = await axios.get(url);
+
+				if (response.data.user !== undefined) {
+					return import("./screens/Main");
+				}
+			}
+
+			return import("./screens/Login");
+
+		});
 	}
 
 	render() {
 		return (
 			<ThemeProvider theme={this.theme}>
-				<Header setToken={this.setToken} user={this.state.user} />
-				<Suspense fallback={<Loading />}>
-					<Routes>
-						<Route path="/" element={<this.shopPage />} />
-						<Route path="/product/*" element={<this.productPage />} />
-						<Route path="/settings" element={<this.settingsPage />} />
-						<Route path="/login" element={<this.loginPage setToken={this.setToken} showMessage={this.showMessage} showErrorMessage={this.showErrorMessage} />} />
-						<Route path="/products" element={<this.productsPage showErrorMessage={this.showErrorMessage} showMessage={this.showMessage} />} />
-						<Route path="/edit/*" element={<this.editPage user={this.state.user} showMessage={this.showMessage} showErrorMessage={this.showErrorMessage} />} />
-						<Route path="/create" element={<this.editPage user={this.state.user} showMessage={this.showMessage} showErrorMessage={this.showErrorMessage} />} />
-					</Routes>
-				</Suspense>
-				<Snackbar open={this.state.alertMessage.length !== 0} onClose={this.clearMessage} autoHideDuration={5000}>
-					<Alert severity={this.state.alertType} onClose={this.clearMessage} >
-						<AlertTitle>Message</AlertTitle>
-						{this.state.alertMessage}
-					</Alert>
-				</Snackbar>
+				<Box>
+					<Suspense fallback={<Loading />}>
+						<this.mainScreen user={this.state.user} setUser={this.setUser} setToken={this.setToken} showMessage={this.showMessage} showErrorMessage={this.showErrorMessage} />
+					</Suspense>
+					<Snackbar open={this.state.alertMessage.length !== 0} onClose={this.clearMessage} autoHideDuration={5000}>
+						<Alert severity={this.state.alertType} onClose={this.clearMessage} >
+							<AlertTitle>Message</AlertTitle>
+							{this.state.alertMessage}
+						</Alert>
+					</Snackbar>
+				</Box>
 			</ThemeProvider>
 		);
 	}

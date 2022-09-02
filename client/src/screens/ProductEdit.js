@@ -31,14 +31,17 @@ export default class ProductEdit extends Component {
 			bid: this.state.bid,
 			user: this.props.user.id,
 			expire: DateTime.fromISO(this.state.expire).toSeconds(),
+			token: Utils.token
 		});
 
 		let response;
 		if (product === null) {
-			let url = sprintf("%sproducts/add?token=%s", environment.SERVER_URL, Utils.token) + "&" + data.toString();
+			let url = sprintf("%sproducts/add?", environment.SERVER_URL) + data.toString();
 			response = await axios.put(url);
 		} else {
-			let url = sprintf("%sproducts/update?token=%s&product=%s", environment.SERVER_URL, Utils.token, product) + "&" + data.toString();
+			data.append("product", product);
+
+			let url = sprintf("%sproducts/update?", environment.SERVER_URL) + data.toString();
 			response = await axios.patch(url);
 		}
 
@@ -53,7 +56,12 @@ export default class ProductEdit extends Component {
 		let product = Utils.pathProduct;
 
 		if (product !== 0) {
-			let url = sprintf("%sproducts/product?product=%s", environment.SERVER_URL, product);
+
+			let params = new URLSearchParams({
+				product: product
+			});
+
+			let url = sprintf("%sproducts/product?", environment.SERVER_URL) + params.toString();
 
 			let response = await axios.get(url);
 

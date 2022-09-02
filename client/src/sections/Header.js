@@ -1,7 +1,6 @@
 import { AppBar, Avatar, Box, Button, Link, Stack, Toolbar, Typography } from "@mui/material";
 import { Component, Fragment } from "react";
 import { Link as Href } from "react-router-dom";
-import Utils from "../utils/Utils";
 
 export default class Header extends Component {
 
@@ -31,17 +30,11 @@ export default class Header extends Component {
 
 							{this.props.user &&
 								<Fragment>
-									{this.props.user.admin &&
-										<Button sx={{ color: "black" }} component={Href} to="/products">Products</Button>
-									}
 									<Typography>{this.props.user.username}</Typography>
 									<Avatar alt={this.props.user.username} src="https://picsum.photos/60" />
 								</Fragment>
 							}
-							{Utils.token.length === 0 ?
-								(<Button sx={{ color: "black" }} component={Href} to="/login">Login</Button>) :
-								(<Button sx={{ color: "black" }} onClick={this.doLogout} component={Href} to="/">Logout</Button>)
-							}
+							<Button sx={{ color: "black" }} onClick={this.doLogout} component={Href} to="/">Logout</Button>
 						</Stack>
 					</Toolbar>
 				</AppBar>

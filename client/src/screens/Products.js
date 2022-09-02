@@ -2,7 +2,6 @@ import { DeleteOutline, Edit, Search, Visibility } from "@mui/icons-material";
 import { Button, IconButton, InputAdornment, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel, TextField, Tooltip } from "@mui/material";
 import { Component, Fragment } from "react";
 import DeleteDialog from "../components/DeleteDialog";
-import Product from "./Product";
 import naturalCompare from "string-natural-compare";
 import { Link as Href } from "react-router-dom";
 import { sprintf } from "sprintf-js";
@@ -69,8 +68,8 @@ export default class Products extends Component {
 
 	handleSearch(item) {
 		return (
-			item != undefined &&
-			(this.state.search.length == 0 ||
+			item !== undefined &&
+			(this.state.search.length === 0 ||
 				Object.values(item).find((val) =>
 					val.toString().toLowerCase().includes(this.state.search.toLowerCase())
 				))
@@ -81,12 +80,17 @@ export default class Products extends Component {
 
 		let product = this.state.product;
 
-		let url = sprintf("%sproducts/delete?token=%s&product=%s", environment.SERVER_URL, Utils.token, product);
+		let params = new URLSearchParams({
+			token: Utils.token,
+			product: product
+		});
+
+		let url = sprintf("%sproducts/delete?", environment.SERVER_URL) + params.toString();
 
 		let response = await axios.delete(url);
 
 		if (response.data.status && response.data.data) {
-			this.setState({ product: null, products: this.state.products.filter((i) => i.id != product) }, () => {
+			this.setState({ product: null, products: this.state.products.filter((i) => i.id !== product) }, () => {
 				this.props.showMessage("Product Successfully Deleted");
 			});
 		} else {
@@ -213,7 +217,7 @@ export default class Products extends Component {
 						<Button variant="contained" component={Href} to="/create" >Create</Button>
 					</Stack>
 				</Stack>
-				<DeleteDialog open={this.state.product != null} handleClose={this.handleClose} handleDelete={this.handleDelete} />
+				<DeleteDialog open={this.state.product !== null} handleClose={this.handleClose} handleDelete={this.handleDelete} />
 
 			</Fragment>
 		);

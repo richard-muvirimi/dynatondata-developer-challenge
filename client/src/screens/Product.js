@@ -11,7 +11,7 @@ export default class Product extends Component {
 					<ProductImage />
 				</Grid>
 				<Grid item xs={12} sm={6} >
-					<ProductDetail />
+					<ProductDetail user={this.props.user} />
 				</Grid>
 
 			</Grid>

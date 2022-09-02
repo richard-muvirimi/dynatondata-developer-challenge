@@ -15,21 +15,22 @@ export default class Login extends Component {
 		this.#txtEmail = createRef();
 		this.#txtPassword = createRef();
 
-
 		this.doLogin = this.doLogin.bind(this);
 	}
 
 	async doLogin() {
 
-		let username = this.#txtEmail.current.value;
-		let password = this.#txtPassword.current.value;
+		let params = new URLSearchParams({
+			username: this.#txtEmail.current.value,
+			password: this.#txtPassword.current.value
+		});
 
-		let url = sprintf("%susers/auth?username=%s&password=%s", environment.SERVER_URL, username, password);
+		let url = sprintf("%susers/auth?", environment.SERVER_URL) + params.toString();
 
 		let response = await axios.get(url);
 
 		if (response.status) {
-			console.log(response.data);
+
 			if (response.data.user.token) {
 				this.props.setToken(response.data.user.token);
 			} else {
@@ -43,7 +44,7 @@ export default class Login extends Component {
 
 	render() {
 		return (
-			<Stack justifyContent="center" alignItems="center" direction="row">
+			<Stack justifyContent="center" alignItems="center" direction="row" sx={{ height: "100vh", width: "100vw" }}>
 				<Paper >
 					<Stack p={{ xs: 1, sm: 3, lg: 5 }} gap={2}>
 						<Typography variant="h6" textAlign="center">

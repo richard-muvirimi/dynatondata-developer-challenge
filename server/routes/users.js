@@ -1,24 +1,15 @@
 var express = require('express');
-// var users = require("../data/users");
 var router = express.Router();
 var base64 = require('base-64');
 const { sprintf } = require('sprintf-js');
-const fs = require('fs');
+var database = require("../util/database");
 
 /* GET user data. */
-router.get('/', function (req, res, next) {
+router.get('/', async function (req, res, next) {
 	let response = { status: true };
 	if (req.query.token.length != 0) {
-		let token = base64.decode(req.query.token);
 
-		let [id, username] = token.split(":");
-
-		let rawdata = fs.readFileSync('data/users.json');
-		let users = JSON.parse(rawdata);
-
-		let user = users.find((user) => {
-			return user.username == username && user.id == id;
-		});
+		let user = await database.fetchUser(req.query.token);
 
 		if (user != undefined) {
 			response.user = {
@@ -40,7 +31,7 @@ router.get('/', function (req, res, next) {
 });
 
 /* Authenticate user */
-router.get('/auth', function (req, res, next) {
+router.get('/auth', async function (req, res, next) {
 
 	let response = { status: true };
 	if (req.query.username.length == 0 || req.query.password.length == 0) {
@@ -48,16 +39,20 @@ router.get('/auth', function (req, res, next) {
 		response.message = "Please provide both Username and Password";
 	} else {
 
-		let rawdata = fs.readFileSync('data/users.json');
-		let users = JSON.parse(rawdata);
+		var connection = await database.getConnection();
 
-		let user = users.find((user) => {
-			return user.username == req.query.username && user.password == req.query.password;
-		});
+		connection.connect();
+
+		let sql = sprintf("SELECT * FROM %s WHERE username = ? AND password = ? LIMIT 1", database.getTableName("users"));
+
+		// Handle errors (Restricted by development time)
+		let [users] = await connection.query(sql, [req.query.username, req.query.password]);
+
+		let user = users[0];
 
 		if (user != undefined) {
 
-			// Hacky token generation, JWT would have been ideal but then again user data is hardcoded
+			// Hacky token generation, JWT would have been ideal but then again user data could have been hardcoded
 			let token = sprintf("%s:%s", user.id, user.username);
 
 			response.user = {
@@ -70,6 +65,39 @@ router.get('/auth', function (req, res, next) {
 	}
 	res.send(response);
 
+});
+
+/* PATCH user bid. */
+router.patch('/settings', async function (req, res, next) {
+	let response = { status: true };
+	if (req.query.token.length != 0) {
+
+		let user = await database.fetchUser(req.query.token);
+
+		if (user != undefined) {
+
+			var connection = await database.getConnection();
+
+			connection.connect();
+
+			let sql = sprintf("UPDATE %s SET bidMax = ?, bidPercentage = ? WHERE id = ?", database.getTableName("users"));
+
+			// Handle errors (Restricted by development time)
+			await connection.query(sql, [req.query.bidMax, req.query.bidPercentage, user.id]);
+
+			connection.end();
+
+			response.user = await database.fetchUser(req.query.token);
+
+		} else {
+			res.status("401");
+			response.message = "Invalid Tokens";
+		}
+	} else {
+		res.status("401");
+		response.message = "Invalid Token";
+	}
+	res.send(response);
 });
 
 module.exports = router;

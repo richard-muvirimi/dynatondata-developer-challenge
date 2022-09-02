@@ -1,5 +1,3 @@
-import base64 from "base-64";
-
 export default class Utils {
 
 	static get pathProduct() {

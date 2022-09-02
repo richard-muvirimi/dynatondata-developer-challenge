@@ -1,6 +1,7 @@
-import { Button, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
+import { AttachMoney } from "@mui/icons-material";
+import { Button, Checkbox, FormControlLabel, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import { DateTime } from "luxon";
-import { Component } from "react";
+import { Component, createRef } from "react";
 import { Link as Href } from "react-router-dom";
 import { sprintf } from "sprintf-js";
 import environment from "../environment";
@@ -9,6 +10,9 @@ const axios = require('axios').default;
 
 export default class ProductDetail extends Component {
 
+	#interval;
+	#TxtCountDown;
+
 	constructor(props) {
 		super(props);
 
@@ -16,30 +20,115 @@ export default class ProductDetail extends Component {
 			title: "",
 			description: "",
 			bid: 0,
+			user: 0,
 			expire: DateTime.now().toSeconds(),
+			bidOffer: 0,
+			bidAuto: false
 		};
 
+		this.#TxtCountDown = createRef();
+
+		this.doBid = this.doBid.bind(this);
+		this.doAutoBid = this.doAutoBid.bind(this);
+		this.updateCountDown = this.updateCountDown.bind(this);
+		this.updateProduct = this.updateProduct.bind(this);
 	}
 
 	async componentDidMount() {
 		let product = Utils.pathProduct;
 
 		if (product !== 0) {
-			let url = sprintf("%sproducts/product?product=%s", environment.SERVER_URL, product);
+
+			let params = new URLSearchParams({
+				product: product
+			});
+
+			let url = sprintf("%sproducts/product?", environment.SERVER_URL) + params.toString();
 
 			let response = await axios.get(url);
 
-			if (response.data.status && response.data.data.length !== 0) {
-				let product = response.data.data[0];
-
-				this.setState({
-					title: product.title,
-					description: product.description,
-					bid: product.bid,
-					expire: product.expire,
-				});
+			if (response.data.status && response.data.data) {
+				this.updateProduct(response.data.data[0]);
 			}
 		}
+
+		this.#interval = setInterval(this.updateCountDown, 1000);
+	}
+
+	updateProduct(product) {
+		this.setState({
+			title: product.title,
+			description: product.description,
+			bid: product.bid,
+			user: product.user,
+			bidAuto: product.users.split("|").includes(this.props.user.id),
+			expire: product.expire,
+			bidOffer: this.state.offer > product.bid ? this.state.bidOffer : (parseFloat(product.bid) + 1)
+		});
+	}
+
+	updateCountDown() {
+		let expiry = DateTime.fromSeconds(this.state.expire);
+
+		if (this.#TxtCountDown.current !== null) {
+			if (DateTime.now().toSeconds() <= expiry.toSeconds()) {
+				this.#TxtCountDown.current.innerHTML = expiry.diffNow().toFormat("h:mm:ss");
+			} else {
+				this.#TxtCountDown.current.innerHTML = "Closed";
+				clearInterval(this.#interval);
+			}
+		}
+	}
+
+	componentWillUnmount() {
+		clearInterval(this.#interval);
+	}
+
+	async doBid() {
+		let product = Utils.pathProduct;
+
+		if (product !== 0) {
+
+			let params = new URLSearchParams({
+				product: product,
+				bid: this.state.bid,
+				token: Utils.token
+			});
+
+			let url = sprintf("%sproducts/bid?", environment.SERVER_URL) + params.toString();
+
+			let response = await axios.patch(url);
+
+			if (response.data.status && response.data.data) {
+				this.updateProduct(response.data.data[0]);
+			}
+		}
+	}
+
+	async doAutoBid(_, auto) {
+		this.setState({ bidAuto: auto }, async () => {
+
+			let product = Utils.pathProduct;
+
+			if (product !== 0) {
+
+				let params = new URLSearchParams({
+					product: product,
+					subscribe: auto,
+					token: Utils.token
+				});
+
+				let url = sprintf("%sproducts/subscribe?", environment.SERVER_URL) + params.toString();
+
+				let response = await axios.patch(url);
+
+				if (response.data.status && response.data.data) {
+					this.updateProduct(response.data.data[0]);
+				}
+			}
+
+		});
+
 	}
 
 	render() {
@@ -60,11 +149,25 @@ export default class ProductDetail extends Component {
 					</Stack>
 					<Stack flexGrow={1}>
 						<Typography>Available Until</Typography>
-						<Typography sx={{ fontWeight: "bold" }}>{DateTime.fromSeconds(this.state.expire).toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS)}</Typography>
+						<Typography sx={{ fontWeight: "bold" }} ref={this.#TxtCountDown}>00:00:00</Typography>
 					</Stack>
 				</Stack>
-				<Stack>
-					<Button variant="contained">Place Bid</Button>
+				<Stack gap={2}>
+					<TextField variant="filled" type="number" InputProps={{
+						startAdornment: (
+							<InputAdornment position="start">
+								<AttachMoney />
+							</InputAdornment>
+						),
+						disableUnderline: true,
+						inputProps: {
+							min: parseFloat(this.state.bid) + 0.5,
+							step: "0.5"
+						}
+					}} value={this.state.bidOffer}
+						onChange={(event) => this.setState({ bidOffer: event.target.value })}
+						label="Your Offer" />
+					<Button variant="contained" onClick={this.doBid} disabled={this.state.user === this.props.user.id || this.props.user.admin}>Place Bid</Button>
 				</Stack>
 				<Stack>
 					<FormControlLabel
@@ -79,6 +182,8 @@ export default class ProductDetail extends Component {
 								</Typography>
 							</Stack>
 						}
+						value={this.state.bidAuto}
+						onChange={this.doAutoBid}
 					/>
 				</Stack>
 			</Stack>

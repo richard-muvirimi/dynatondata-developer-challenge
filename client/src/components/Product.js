@@ -1,4 +1,4 @@
-import { Box, Button, Link, Paper, Stack, Typography } from "@mui/material";
+import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 import { Component } from "react";
 import { Link as Href } from "react-router-dom";
 import { sprintf } from "sprintf-js";
@@ -14,8 +14,7 @@ export default class Product extends Component {
 		let color = "white";
 
 		return {
-			// color: "black",
-			textShadow: "0 0 2px white"
+			textShadow: sprintf("0 0 2px %s", color)
 			// textShadow: sprintf(
 			// 	"-0.5px 0 %s, 0 0.5px %s, 0.5px 0 %s, 0 -0.5px %s",
 			// 	color,
