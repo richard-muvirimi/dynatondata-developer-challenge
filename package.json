@@ -15,6 +15,7 @@
     "string-natural-compare": "^3.0.1"
   },
   "scripts": {
+    "install": "npm install && cd ./server && npm install && cd ../client && npm install",
     "client": "cd ./client && yarn start",
     "server": "cd ./server && yarn start"
   },
