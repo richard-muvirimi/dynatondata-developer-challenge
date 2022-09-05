@@ -60,8 +60,8 @@ export default class Products extends Component {
 			{ key: "id", title: "#" },
 			{ key: "title", title: "Title" },
 			{ key: "description", title: "Description" },
-			{ key: "bid", title: "Current Bid" },
-			{ key: "user", title: "Current User" },
+			{ key: "bid", title: "Current Bid", align: "right" },
+			{ key: "user", title: "Current User (ID)", align: "right" },
 			{ key: "actions", title: "", align: "right" },
 		];
 	}
@@ -186,10 +186,10 @@ export default class Products extends Component {
 													{product.title}
 												</TableCell>
 												<TableCell>{product.description}</TableCell>
-												<TableCell>{sprintf("$%f", product.bid)}</TableCell>
-												<TableCell>{sprintf("$%d", product.user)}</TableCell>
+												<TableCell align="right">{sprintf("$%f", product.bid)}</TableCell>
+												<TableCell align="right">{product.user}</TableCell>
 												<TableCell align="right">
-													<Stack direction="row">
+													<Stack direction="row" justifyContent="flex-end">
 														<Tooltip title="View">
 															<IconButton component={Href} to={sprintf("/product/%s", product.id)} >
 																<Visibility />
@@ -219,7 +219,7 @@ export default class Products extends Component {
 				</Stack>
 				<DeleteDialog open={this.state.product !== null} handleClose={this.handleClose} handleDelete={this.handleDelete} />
 
-			</Fragment>
+			</Fragment >
 		);
 	}
 }

@@ -4,6 +4,7 @@ import { sprintf } from "sprintf-js";
 import environment from "../environment";
 import ProductFilter from "../sections/ProductFilter";
 import ProductList from "../sections/ProductList";
+import Utils from "../utils/Utils";
 const axios = require('axios').default;
 
 export default class Shop extends Component {
@@ -20,6 +21,7 @@ export default class Shop extends Component {
 
 		this.setArrange = this.setArrange.bind(this);
 		this.setRange = this.setRange.bind(this);
+		this.checkNotice = this.checkNotice.bind(this);
 	}
 
 	setRange(min, max) {
@@ -38,6 +40,22 @@ export default class Shop extends Component {
 		let products = response.data.data;
 
 		this.setState({ products: products, minimum: Math.min(...products.map(p => p.bid)), maximum: Math.max(...products.map(p => p.bid)) });
+
+		setTimeout(this.checkNotice, 0);
+	}
+
+	async checkNotice() {
+		let params = new URLSearchParams({
+			token: Utils.token
+		})
+
+		let url = sprintf("%susers/notice?", environment.SERVER_URL) + params.toString();
+
+		let response = await axios.get(url);
+
+		if (response.data.status && response.data.notice) {
+			this.props.showMessage(response.data.notice);
+		}
 	}
 
 	render() {

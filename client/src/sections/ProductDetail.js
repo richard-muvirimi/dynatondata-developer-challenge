@@ -48,7 +48,7 @@ export default class ProductDetail extends Component {
 			let response = await axios.get(url);
 
 			if (response.data.status && response.data.data) {
-				this.updateProduct(response.data.data[0]);
+				this.updateProduct(response.data.data);
 			}
 		}
 
@@ -59,11 +59,11 @@ export default class ProductDetail extends Component {
 		this.setState({
 			title: product.title,
 			description: product.description,
-			bid: product.bid,
+			bid: parseFloat(product.bid),
 			user: product.user,
 			bidAuto: product.users.split("|").includes(this.props.user.id),
 			expire: product.expire,
-			bidOffer: this.state.offer > product.bid ? this.state.bidOffer : (parseFloat(product.bid) + 1)
+			bidOffer: this.state.offer > parseFloat(product.bid) ? this.state.bidOffer : (parseFloat(product.bid) + 1)
 		});
 	}
 
@@ -91,7 +91,7 @@ export default class ProductDetail extends Component {
 
 			let params = new URLSearchParams({
 				product: product,
-				bid: this.state.bid,
+				bid: this.state.bidOffer,
 				token: Utils.token
 			});
 
@@ -100,7 +100,7 @@ export default class ProductDetail extends Component {
 			let response = await axios.patch(url);
 
 			if (response.data.status && response.data.data) {
-				this.updateProduct(response.data.data[0]);
+				this.updateProduct(response.data.data);
 			}
 		}
 	}
@@ -123,12 +123,16 @@ export default class ProductDetail extends Component {
 				let response = await axios.patch(url);
 
 				if (response.data.status && response.data.data) {
-					this.updateProduct(response.data.data[0]);
+					this.updateProduct(response.data.data);
 				}
 			}
 
 		});
 
+	}
+
+	get isActive() {
+		return this.state.user === this.props.user.id || this.props.user.admin || this.state.expire < DateTime.now().toSeconds();
 	}
 
 	render() {
@@ -167,11 +171,15 @@ export default class ProductDetail extends Component {
 					}} value={this.state.bidOffer}
 						onChange={(event) => this.setState({ bidOffer: event.target.value })}
 						label="Your Offer" />
-					<Button variant="contained" onClick={this.doBid} disabled={this.state.user === this.props.user.id || this.props.user.admin}>Place Bid</Button>
+					{this.isActive &&
+						<Typography variant="caption">You cannot bid on this product</Typography>
+					}
+					<Button variant="contained" onClick={this.doBid} disabled={this.isActive}>Place Bid</Button>
 				</Stack>
 				<Stack>
 					<FormControlLabel
 						control={<Checkbox />}
+						disabled={this.isActive}
 						label={
 							<Stack direction="row" spacing={1}>
 								<Typography >

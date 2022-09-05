@@ -66,7 +66,7 @@ export default class ProductEdit extends Component {
 			let response = await axios.get(url);
 
 			if (response.data.status && response.data.data.length !== 0) {
-				let product = response.data.data[0];
+				let product = response.data.data;
 
 				this.setState({
 					title: product.title,

@@ -76,7 +76,7 @@ export default class Settings extends Component {
 								min: 0,
 								max: 100
 							}
-						}} value={this.state.bidPercentage} onChange={(event) => this.setState({ bidMax: event.target.value })} />
+						}} value={this.state.bidPercentage} onChange={(event) => this.setState({ bidPercentage: event.target.value })} />
 					</Stack>
 				</Stack>
 				<Stack my={3} direction="row">

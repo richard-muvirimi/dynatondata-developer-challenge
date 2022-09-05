@@ -21,31 +21,55 @@ const database = {
 
 		let [id, username] = token.split(":");
 
-		let connection = await this.getConnection();
-
-		connection.connect();
-
-		let sql = sprintf("SELECT * FROM %s WHERE id = ? AND username = ? LIMIT 1", this.getTableName("users"));
-
-		// Handle errors (Restricted by development time)
-		let [users] = await connection.query(sql, [id, username]);
-
-		connection.end();
-
-		return users[0];
+		return await this.fetchUserById(id);
 	},
-	"fetchProduct": async function (product) {
-		let connection = await this.getConnection();
+	"fetchUserById": async function (id) {
 
-		connection.connect();
+		let user = undefined;
 
-		let sql = sprintf("SELECT * FROM %s WHERE id = ?", this.getTableName("products"));
+		let connection;
+		try {
+			connection = await this.getConnection();
 
-		let [results] = await connection.query(sql, [product]);
+			connection.connect();
 
-		connection.end();
+			let sql = sprintf("SELECT * FROM %s WHERE id = ? LIMIT 1", this.getTableName("users"));
 
-		return results[0];
+			// Handle errors (Restricted by development time)
+			let [users] = await connection.query(sql, [id]);
+
+			user = users[0];
+		} catch (error) {
+			console.log(error);
+		} finally {
+			connection?.end();
+		}
+
+		return user;
+	},
+	"fetchProduct": async function (id) {
+
+		let product = undefined;
+
+		let connection;
+		try {
+
+			connection = await this.getConnection();
+
+			connection.connect();
+
+			let sql = sprintf("SELECT * FROM %s WHERE id = ?", this.getTableName("products"));
+
+			let [results] = await connection.query(sql, [id]);
+
+			product = results[0];
+		} catch (error) {
+			console.log(error);
+		} finally {
+			connection?.end();
+		}
+
+		return product;
 	},
 	"validToken": async function (token) {
 

@@ -1,25 +1,31 @@
 var express = require('express');
 var router = express.Router();
 const { sprintf } = require('sprintf-js');
-var base64 = require('base-64');
 var database = require("../util/database");
 
 /* GET product listing. */
 router.get('/', async function (req, res, next) {
   let response = { status: true };
 
-  var connection = await database.getConnection();
+  let connection;
+  try {
 
-  connection.connect();
+    connection = await database.getConnection();
 
-  let sql = sprintf("SELECT * FROM %s", database.getTableName("products"));
+    connection.connect();
 
-  // Handle errors (Restricted by development time)
-  let [results] = await connection.query(sql);
+    let sql = sprintf("SELECT * FROM %s", database.getTableName("products"));
 
-  response.data = results;
+    // Handle errors (Restricted by development time)
+    let [results] = await connection.query(sql);
 
-  connection.end();
+    response.data = results;
+
+  } catch (error) {
+    console.log(error);
+  } finally {
+    connection?.end();
+  }
 
   res.send(response);
 });
@@ -47,20 +53,27 @@ function isNumeric(value) {
 router.put('/add', async function (req, res, next) {
   let response = { status: true };
 
-  if (validToken(req.query.token) && req.query.title.length != 0 && req.query.description.length != 0 && isNumeric(req.query.expire) && isNumeric(req.query.bid)) {
+  if (database.validToken(req.query.token) && req.query.title.length != 0 && req.query.description.length != 0 && isNumeric(req.query.expire) && isNumeric(req.query.bid)) {
 
-    var connection = await database.getConnection();
+    let connection;
+    try {
 
-    connection.connect();
+      connection = await database.getConnection();
 
-    let sql = sprintf("INSERT INTO %s (title, description, bid, user, expire) VALUES (?,?,?,?,?)", database.getTableName("products"));
+      connection.connect();
 
-    // Handle errors (Restricted by development time)
-    await connection.query(sql, [req.query.title, req.query.description, req.query.bid, req.query.user, req.query.expire]);
+      let sql = sprintf("INSERT INTO %s (title, description, bid, user, expire) VALUES (?,?,?,?,?)", database.getTableName("products"));
 
-    response.data = true;
+      // Handle errors (Restricted by development time)
+      await connection.query(sql, [req.query.title, req.query.description, req.query.bid, req.query.user, req.query.expire]);
 
-    connection.end();
+      response.data = true;
+
+    } catch (error) {
+      console.log(error);
+    } finally {
+      connection?.end();
+    }
   } else {
     response.data = false;
     response.message = "Invalid token or Product details";
@@ -73,20 +86,26 @@ router.put('/add', async function (req, res, next) {
 router.patch('/update', async function (req, res, next) {
   let response = { status: true };
 
-  if (validToken(req.query.token) && req.query.title.length != 0 && req.query.description.length != 0 && isNumeric(req.query.expire) && isNumeric(req.query.bid) && isNumeric(req.query.product)) {
+  if (database.validToken(req.query.token) && req.query.title.length != 0 && req.query.description.length != 0 && isNumeric(req.query.expire) && isNumeric(req.query.bid) && isNumeric(req.query.product)) {
 
-    var connection = await database.getConnection();
+    let connection;
+    try {
+      connection = await database.getConnection();
 
-    connection.connect();
+      connection.connect();
 
-    let sql = sprintf("UPDATE %s SET title = ?, description = ?, bid = ?, user = ?, expire = ? WHERE id = ?", database.getTableName("products"));
+      let sql = sprintf("UPDATE %s SET title = ?, description = ?, bid = ?, user = ?, expire = ? WHERE id = ?", database.getTableName("products"));
 
-    // Handle errors (Restricted by development time)
-    await connection.query(sql, [req.query.title, req.query.description, req.query.bid, req.query.user, req.query.expire, req.query.product]);
+      // Handle errors (Restricted by development time)
+      await connection.query(sql, [req.query.title, req.query.description, req.query.bid, req.query.user, req.query.expire, req.query.product]);
 
-    response.data = true;
+      response.data = true;
 
-    connection.end();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      connection?.end();
+    }
   } else {
     response.data = false;
     response.message = "Invalid token or Product details";
@@ -99,20 +118,26 @@ router.patch('/update', async function (req, res, next) {
 router.delete('/delete', async function (req, res, next) {
   let response = { status: true };
 
-  if (validToken(req.query.token) && isNumeric(req.query.product)) {
+  if (database.validToken(req.query.token) && isNumeric(req.query.product)) {
 
-    var connection = await database.getConnection();
+    let connection;
+    try {
+      connection = await database.getConnection();
 
-    connection.connect();
+      connection.connect();
 
-    let sql = sprintf("DELETE FROM %s WHERE id = ?", database.getTableName("products"));
+      let sql = sprintf("DELETE FROM %s WHERE id = ?", database.getTableName("products"));
 
-    // Handle errors (Restricted by development time)
-    await connection.execute(sql, [req.query.product]);
+      // Handle errors (Restricted by development time)
+      await connection.execute(sql, [req.query.product]);
 
-    response.data = true;
+      response.data = true;
 
-    connection.end();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      connection?.end();
+    }
 
   } else {
     response.data = false;
@@ -131,18 +156,39 @@ router.patch('/bid', async function (req, res, next) {
 
     if (user != undefined) {
 
-      var connection = await database.getConnection();
+      let product = await database.fetchProduct(req.query.product);
 
-      connection.connect();
+      let bid = parseFloat(req.query.bid);
+      let bidders = product.users
+        .map(id => database.fetchUserById(id))
+        .filter(bidder => {
+          // fetch users with max bid amount greater than current bid
+          return bidder.bidMax > bid + 1.5;
+        });
 
-      // TODO take highest bidder instead
-      let sql = sprintf("UPDATE %s SET user = ?, bid = ? WHERE id = ? AND bid < ?", database.getTableName("products"));
 
-      await connection.query(sql, [req.query.user, req.query.bid, req.query.product, req.query.bid]);
+      if (bidders.length != 0) {
+        user = bidders[0]; // first, could be random
+        bid = bid + 1.5;
+      }
 
-      connection.end();
+      let connection;
+      try {
+        connection = await database.getConnection();
 
-      response.data = await database.fetchProduct(req.query.product);
+        connection.connect();
+
+        let sql = sprintf("UPDATE %s SET user = ?, bid = ? WHERE id = ? AND bid < ?", database.getTableName("products"));
+
+        await connection.query(sql, [user.id, bid, req.query.product, bid]);
+
+        response.data = await database.fetchProduct(req.query.product);
+
+      } catch (error) {
+        console.log(error);
+      } finally {
+        connection?.end();
+      }
 
     } else {
       res.status("401");
@@ -165,27 +211,33 @@ router.patch('/subscribe', async function (req, res, next) {
 
     if (user != undefined) {
 
-      var connection = await database.getConnection();
+      let connection;
+      try {
+        connection = await database.getConnection();
 
-      connection.connect();
+        connection.connect();
 
-      let product = await database.fetchProduct(req.query.product)
+        let product = await database.fetchProduct(req.query.product)
 
-      let users = product.users.split("|").filter();
+        let users = product.users.split(",")
+          .filter(b => b.length !== 0)
+          .filter(u => parseInt(u) !== parseInt(user.id));
 
-      if (req.query.subscribe) {
-        users.push(user.id);
-      } else {
-        users = users.filter(u => u == user.id);
+        if (req.query.subscribe.toLowerCase() === "true") {
+          users.push(user.id);
+        }
+
+        sql = sprintf("UPDATE %s SET users = ? WHERE id = ?", database.getTableName("products"));
+
+        await connection.query(sql, [users.join(","), req.query.product]);
+
+        response.data = await database.fetchProduct(req.query.product);
+
+      } catch (error) {
+        console.log(error);
+      } finally {
+        connection?.end();
       }
-
-      sql = sprintf("UPDATE %s SET users = ? WHERE id = ?", database.getTableName("products"));
-
-      await connection.query(sql, [users.join("|"), req.query.product]);
-
-      connection.end();
-
-      response.data = await database.fetchProduct(req.query.product);
 
     } else {
       res.status("401");
