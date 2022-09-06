@@ -27,19 +27,22 @@ export default class Login extends Component {
 
 		let url = sprintf("%susers/auth?", environment.SERVER_URL) + params.toString();
 
-		let response = await axios.get(url);
+		try {
+			let response = await axios.get(url);
 
-		if (response.status) {
+			if (response.status) {
 
-			if (response.data.user.token) {
-				this.props.setToken(response.data.user.token);
+				if (response.data.user.token) {
+					this.props.setToken(response.data.user.token);
+				} else {
+					this.props.showErrorMessage(response.message);
+				}
 			} else {
-				this.props.showErrorMessage(response.message);
+				this.props.showErrorMessage("Failed to communicate with remote server.");
 			}
-		} else {
-			this.props.showErrorMessage("Failed to communicate with remote server.");
+		} catch (error) {
+			this.props.showErrorMessage(error.message);
 		}
-
 	}
 
 	render() {

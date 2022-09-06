@@ -35,11 +35,15 @@ export default class Shop extends Component {
 	async componentDidMount() {
 		let url = sprintf("%sproducts", environment.SERVER_URL);
 
-		let response = await axios.get(url);
+		try {
+			let response = await axios.get(url);
 
-		let products = response.data.data;
+			let products = response.data.data;
 
-		this.setState({ products: products, minimum: Math.min(...products.map(p => p.bid)), maximum: Math.max(...products.map(p => p.bid)) });
+			this.setState({ products: products, minimum: Math.min(...products.map(p => p.bid)), maximum: Math.max(...products.map(p => p.bid)) });
+		} catch (error) {
+			this.props.showErrorMessage(error.message);
+		}
 
 		setTimeout(this.checkNotice, 0);
 	}
@@ -51,10 +55,14 @@ export default class Shop extends Component {
 
 		let url = sprintf("%susers/notice?", environment.SERVER_URL) + params.toString();
 
-		let response = await axios.get(url);
+		try {
+			let response = await axios.get(url);
 
-		if (response.data.status && response.data.notice) {
-			this.props.showMessage(response.data.notice);
+			if (response.data.status && response.data.notice) {
+				this.props.showMessage(response.data.notice);
+			}
+		} catch (error) {
+			this.props.showErrorMessage(error.message);
 		}
 	}
 

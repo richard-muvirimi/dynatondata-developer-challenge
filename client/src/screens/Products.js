@@ -87,14 +87,18 @@ export default class Products extends Component {
 
 		let url = sprintf("%sproducts/delete?", environment.SERVER_URL) + params.toString();
 
-		let response = await axios.delete(url);
+		try {
+			let response = await axios.delete(url);
 
-		if (response.data.status && response.data.data) {
-			this.setState({ product: null, products: this.state.products.filter((i) => i.id !== product) }, () => {
-				this.props.showMessage("Product Successfully Deleted");
-			});
-		} else {
-			this.props.showErrorMessage("Failed to delete Product");
+			if (response.data.status && response.data.data) {
+				this.setState({ product: null, products: this.state.products.filter((i) => i.id !== product) }, () => {
+					this.props.showMessage("Product Successfully Deleted");
+				});
+			} else {
+				this.props.showErrorMessage("Failed to delete Product");
+			}
+		} catch (error) {
+			this.props.showErrorMessage(error.message);
 		}
 
 	}
@@ -102,9 +106,13 @@ export default class Products extends Component {
 	async componentDidMount() {
 		let url = sprintf("%sproducts", environment.SERVER_URL);
 
-		let response = await axios.get(url);
+		try {
+			let response = await axios.get(url);
 
-		this.setState({ products: response.data.data });
+			this.setState({ products: response.data.data });
+		} catch (error) {
+			this.props.showErrorMessage(error.message);
+		}
 	}
 
 	render() {

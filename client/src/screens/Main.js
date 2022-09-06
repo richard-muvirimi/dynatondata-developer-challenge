@@ -34,10 +34,14 @@ export default class Main extends Component {
 
 				let url = sprintf("%susers?", environment.SERVER_URL) + params.toString();
 
-				let response = await axios.get(url);
+				try {
+					let response = await axios.get(url);
 
-				if (response.data.user !== undefined && response.data.user.admin) {
-					return import("./Products");
+					if (response.data.user !== undefined && response.data.user.admin) {
+						return import("./Products");
+					}
+				} catch (error) {
+					this.props.showErrorMessage(error.message);
 				}
 			}
 
@@ -53,8 +57,8 @@ export default class Main extends Component {
 				<Suspense fallback={<Loading />}>
 					<Routes>
 						<Route path="/" element={<this.mainScreen user={this.props.user} showErrorMessage={this.props.showErrorMessage} showMessage={this.props.showMessage} />} />
-						<Route path="/product/*" element={<this.productPage user={this.props.user} />} />
-						<Route path="/settings" element={<this.settingsPage user={this.props.user} setUser={this.props.setUser} />} />
+						<Route path="/product/*" element={<this.productPage user={this.props.user} showErrorMessage={this.props.showErrorMessage} />} />
+						<Route path="/settings" element={<this.settingsPage user={this.props.user} setUser={this.props.setUser} />} showErrorMessage={this.props.showErrorMessage} />
 
 						<Route path="/edit/*" element={<this.editPage user={this.props.user} showMessage={this.props.showMessage} showErrorMessage={this.props.showErrorMessage} />} />
 						<Route path="/create" element={<this.editPage user={this.props.user} showMessage={this.props.showMessage} showErrorMessage={this.props.showErrorMessage} />} />

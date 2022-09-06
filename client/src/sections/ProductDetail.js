@@ -45,10 +45,14 @@ export default class ProductDetail extends Component {
 
 			let url = sprintf("%sproducts/product?", environment.SERVER_URL) + params.toString();
 
-			let response = await axios.get(url);
+			try {
+				let response = await axios.get(url);
 
-			if (response.data.status && response.data.data) {
-				this.updateProduct(response.data.data);
+				if (response.data.status && response.data.data) {
+					this.updateProduct(response.data.data);
+				}
+			} catch (error) {
+				this.props.showErrorMessage(error.message);
 			}
 		}
 
@@ -97,10 +101,14 @@ export default class ProductDetail extends Component {
 
 			let url = sprintf("%sproducts/bid?", environment.SERVER_URL) + params.toString();
 
-			let response = await axios.patch(url);
+			try {
+				let response = await axios.patch(url);
 
-			if (response.data.status && response.data.data) {
-				this.updateProduct(response.data.data);
+				if (response.data.status && response.data.data) {
+					this.updateProduct(response.data.data);
+				}
+			} catch (error) {
+				this.props.showErrorMessage(error.message);
 			}
 		}
 	}
@@ -120,10 +128,14 @@ export default class ProductDetail extends Component {
 
 				let url = sprintf("%sproducts/subscribe?", environment.SERVER_URL) + params.toString();
 
-				let response = await axios.patch(url);
+				try {
+					let response = await axios.patch(url);
 
-				if (response.data.status && response.data.data) {
-					this.updateProduct(response.data.data);
+					if (response.data.status && response.data.data) {
+						this.updateProduct(response.data.data);
+					}
+				} catch (error) {
+					this.props.showErrorMessage(error.message);
 				}
 			}
 

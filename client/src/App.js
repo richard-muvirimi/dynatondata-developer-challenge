@@ -107,9 +107,13 @@ export default class App extends Component {
 
 			let url = sprintf("%susers?", environment.SERVER_URL) + params.toString();
 
-			let response = await axios.get(url);
+			try {
+				let response = await axios.get(url);
 
-			this.setUser(response.data.user);
+				this.setUser(response.data.user);
+			} catch (error) {
+				this.showErrorMessage(error.message);
+			}
 		}
 	}
 
@@ -130,10 +134,14 @@ export default class App extends Component {
 
 				let url = sprintf("%susers?", environment.SERVER_URL) + params.toString();
 
-				let response = await axios.get(url);
+				try {
+					let response = await axios.get(url);
 
-				if (response.data.user !== undefined) {
-					return import("./screens/Main");
+					if (response.data.user !== undefined) {
+						return import("./screens/Main");
+					}
+				} catch (error) {
+					this.showErrorMessage(error.message);
 				}
 			}
 

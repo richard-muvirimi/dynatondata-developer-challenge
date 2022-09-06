@@ -29,10 +29,14 @@ export default class Settings extends Component {
 
 		let url = sprintf("%susers/settings?", environment.SERVER_URL) + params.toString();
 
-		let response = await axios.patch(url);
+		try {
+			let response = await axios.patch(url);
 
-		if (response.data.status && response.data.user) {
-			this.props.setUser(response.data.user);
+			if (response.data.status && response.data.user) {
+				this.props.setUser(response.data.user);
+			}
+		} catch (error) {
+			this.props.showErrorMessage(error.message);
 		}
 	}
 

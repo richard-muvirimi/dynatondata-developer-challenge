@@ -34,21 +34,25 @@ export default class ProductEdit extends Component {
 			token: Utils.token
 		});
 
-		let response;
-		if (product === null) {
-			let url = sprintf("%sproducts/add?", environment.SERVER_URL) + data.toString();
-			response = await axios.put(url);
-		} else {
-			data.append("product", product);
+		try {
+			let response;
+			if (product === null) {
+				let url = sprintf("%sproducts/add?", environment.SERVER_URL) + data.toString();
+				response = await axios.put(url);
+			} else {
+				data.append("product", product);
 
-			let url = sprintf("%sproducts/update?", environment.SERVER_URL) + data.toString();
-			response = await axios.patch(url);
-		}
+				let url = sprintf("%sproducts/update?", environment.SERVER_URL) + data.toString();
+				response = await axios.patch(url);
+			}
 
-		if (response.data.status && response.data.data) {
-			this.props.showMessage("Product Successfully Saved");
-		} else {
-			this.props.showErrorMessage("Failed to update Product");
+			if (response.data.status && response.data.data) {
+				this.props.showMessage("Product Successfully Saved");
+			} else {
+				this.props.showErrorMessage("Failed to update Product");
+			}
+		} catch (error) {
+			this.props.showErrorMessage(error.message);
 		}
 	}
 
@@ -63,17 +67,21 @@ export default class ProductEdit extends Component {
 
 			let url = sprintf("%sproducts/product?", environment.SERVER_URL) + params.toString();
 
-			let response = await axios.get(url);
+			try {
+				let response = await axios.get(url);
 
-			if (response.data.status && response.data.data.length !== 0) {
-				let product = response.data.data;
+				if (response.data.status && response.data.data.length !== 0) {
+					let product = response.data.data;
 
-				this.setState({
-					title: product.title,
-					description: product.description,
-					bid: product.bid,
-					expire: DateTime.fromSeconds(product.expire).toFormat("yyyy-LL-dd'T'HH:mm"),
-				});
+					this.setState({
+						title: product.title,
+						description: product.description,
+						bid: product.bid,
+						expire: DateTime.fromSeconds(product.expire).toFormat("yyyy-LL-dd'T'HH:mm"),
+					});
+				}
+			} catch (error) {
+				this.props.showErrorMessage(error.message);
 			}
 		}
 	}
