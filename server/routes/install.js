@@ -13,11 +13,17 @@ router.get('/', async function (req, res, next) {
 
 		connection.connect();
 
-		let sql = await fs.readFile('../data/install.sql', { encoding: 'utf8' });
+		let sql = await fs.readFile('./data/install.sql', { encoding: 'utf8' });
 
-		sql = sql.replace("{{PREFIX}}", process.env.DATABASE_PREFIX);
+		sql = sql.replaceAll("{{PREFIX}}", process.env.DATABASE_PREFIX);
 
-		await connection.execute(sql);
+		sql.split(";")
+			.map(t => t.trim())
+			.filter(t => t.length > 0)
+			.forEach(async statement => {
+				await connection.execute(statement);
+			});
+
 	} catch (error) {
 		console.log(error);
 	} finally {

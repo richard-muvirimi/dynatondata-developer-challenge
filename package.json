@@ -7,15 +7,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "base-64": "^1.0.0",
     "block-stream": "^0.0.9",
-    "create-react-app": "^5.0.1",
-    "luxon": "^3.0.3",
-    "sprintf-js": "^1.1.2",
-    "string-natural-compare": "^3.0.1"
+    "create-react-app": "^5.0.1"
   },
   "scripts": {
-    "install": "npm install && cd ./server && npm install && cd ../client && npm install",
     "client": "cd ./client && yarn start",
     "server": "cd ./server && yarn start"
   },

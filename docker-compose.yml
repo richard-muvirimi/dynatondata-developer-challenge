@@ -1,0 +1,18 @@
+version: '1.0'
+
+services:
+  server:
+    build:
+      dockerfile: Dockerfile
+      context: "./server"
+    ports:
+      - 9000:9000
+
+  client:
+    build:
+      dockerfile: Dockerfile
+      context: ./client
+    ports:
+      - 3000:3000
+    depends_on:
+      - server

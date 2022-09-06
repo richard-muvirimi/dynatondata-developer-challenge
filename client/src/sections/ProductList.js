@@ -1,6 +1,5 @@
 import { Stack } from "@mui/material";
 import { Component, Fragment } from "react";
-import { sprintf } from "sprintf-js";
 import naturalCompare from "string-natural-compare";
 import Product from "../components/Product";
 
