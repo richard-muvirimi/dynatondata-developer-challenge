@@ -20,13 +20,13 @@ export default class ProductList extends Component {
 		let compare = 0;
 		switch (this.props.arrange) {
 			case "least":
-				compare = naturalCompare(p1.bid, p2.bid);
+				compare = naturalCompare(p1.bid.toString(), p2.bid.toString());
 				break;
 			case "most":
-				compare = naturalCompare(p2.bid, p1.bid);
+				compare = naturalCompare(p2.bid.toString(), p1.bid.toString());
 				break;
 			case "expire":
-				compare = naturalCompare(p1.expire, p2.expire);
+				compare = naturalCompare(p1.expire.toString(), p2.expire.toString());
 				break;
 			default:
 				// Leave as is
@@ -37,7 +37,7 @@ export default class ProductList extends Component {
 
 	render() {
 		return (
-			<Stack direction="row" gap={2} m={2}>
+			<Stack direction="row" gap={2} m={2} flexWrap="wrap">
 				{this.props.products
 					.filter(this.filterBid)
 					.sort(this.sortArrange)
